@@ -1,0 +1,23 @@
+<launch>
+    <node pkg="turtlesim" type="turtlesim_node" name="sim" />
+
+    <node pkg="rosservice" type="rosservice" name="spawn_turtle2" 
+          args="call /spawn 2.0 2.0 0.0 'turtle2'" />
+    
+    <node pkg="hello_world" type="ros1.py" name="stalker_2">
+        <param name="stalker_name" value="turtle2" />
+        <param name="victim_name" value="turtle1" />
+        <param name="speed" value="0.5" />
+    </node>
+
+    <node pkg="rosservice" type="rosservice" name="spawn_turtle3" 
+          args="call /spawn 3.0 3.0 0.0 'turtle3'" />
+
+    <node pkg="hello_world" type="ros1.py" name="stalker_3">
+        <param name="stalker_name" value="turtle3" />
+        <param name="victim_name" value="turtle1" />
+        <param name="speed" value="0.1" />
+    </node>
+
+    <node pkg="turtlesim" type="turtle_teleop_key" name="teleop" output="screen" />
+</launch>
