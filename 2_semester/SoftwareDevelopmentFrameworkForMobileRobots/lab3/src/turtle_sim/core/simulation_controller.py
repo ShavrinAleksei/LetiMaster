@@ -16,7 +16,8 @@ class SimulationController:
         self.consumer_thread.add_subscription("/spawn", self._on_spawn)
 
     def _wall_hit_handler(self, turtle_name, wall_side):
-        print(f"{turtle_name} hit the {wall_side} wall!")
+        # print(f"{turtle_name} hit the {wall_side} wall!")
+        pass
 
     def move_turtles(self, dt: float):
         for turtle in self.turtles:

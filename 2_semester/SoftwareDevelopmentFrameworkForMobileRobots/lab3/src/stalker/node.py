@@ -30,9 +30,13 @@ class StalkerNode:
     def _try_chase(self):
         with self._lock:
             if self._current_pose is None or self._target_pose is None:
+                print(f"DEBUG: {self.stalker_name} waiting for poses (curr={self._current_pose is not None}, target={self._target_pose is not None})")
                 return
             current = self._current_pose
             target = self._target_pose
-        linear, angular = self.controller.compute_velocity(current, target)
-        vel_msg = VelocityMessage(linear, angular)
-        self.rabbit_manager.publish(f"{self.stalker_name}/cmd_vel", vel_msg.to_dict())
+        try:
+            linear, angular = self.controller.compute_velocity(current, target)
+            vel_msg = VelocityMessage(linear, angular)
+            self.rabbit_manager.publish(f"{self.stalker_name}/cmd_vel", vel_msg.to_dict())
+        except Exception as e:
+            print(f"ERROR in {self.stalker_name}: {e}")
