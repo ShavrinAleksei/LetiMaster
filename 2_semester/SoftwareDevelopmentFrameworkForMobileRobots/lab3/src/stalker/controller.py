@@ -3,7 +3,7 @@ import math
 class StalkerController:
     def __init__(self, speed=1.0):
         self._speed = speed
-        self._stop_distance = 0.5
+        self._stop_distance = 0.3
         self._angular_gain = 4.0
 
     def compute_velocity(self, current_pose, target_pose):

@@ -1,3 +1,3 @@
-from .rabbitmq_bridge import RabbitMQManager, ConsumerThread
+from .rabbit_manager import RabbitMQManager
 
-__all__ = ['RabbitMQManager', 'ConsumerThread']
+__all__ = ['RabbitMQManager']

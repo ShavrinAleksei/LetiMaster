@@ -35,7 +35,6 @@ class SimulatorWidget(QWidget):
             return
 
         self.controller.move_turtles(dt)
-        self.controller.publish_all_poses()
 
         self._last_time = now
         self.update()

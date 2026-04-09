@@ -1,42 +1,62 @@
-import threading
+import logging
+import time
+from threading import Lock
 from turtle_comm.comm import RabbitMQManager
 from turtle_comm.messages import VelocityMessage, PoseMessage
 from stalker.controller import StalkerController
 from turtle_sim.core import Pose
 
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
 class StalkerNode:
-    def __init__(self, stalker_name: str, victim_name: str, speed: float, rabbit_manager: RabbitMQManager):
-        self.stalker_name = stalker_name
-        self.victim_name = victim_name
-        self.rabbit_manager = rabbit_manager
+    def __init__(self, name: str, victim: str, speed: float, host: str):
+        self.name = name
+        self.victim = victim
+        self.speed = speed
+        self.manager = RabbitMQManager(host=host)
+        self.victim_pose = None
+        self.my_pose = None
+        self._lock = Lock()
+        self.running = True
         self.controller = StalkerController(speed=speed)
 
-        self._current_pose = None
-        self._target_pose = None
-        self._lock = threading.Lock()
+    def run(self):
+        self.manager.connect()
+        self.manager.start_consuming()
 
-    def on_self_pose(self, routing_key, data):
-        pose_msg = PoseMessage.from_dict(data)
-        with self._lock:
-            self._current_pose = Pose(pose_msg.x, pose_msg.y, pose_msg.theta)
-        self._try_chase()
+        self.manager.subscribe_json(f"{self.victim}/pose", self.on_victim_pose)
+        self.manager.subscribe_json(f"{self.name}/pose", self.on_self_pose)
 
-    def on_target_pose(self, routing_key, data):
-        pose_msg = PoseMessage.from_dict(data)
-        with self._lock:
-            self._target_pose = Pose(pose_msg.x, pose_msg.y, pose_msg.theta)
-        self._try_chase()
+        logger.info(f"Stalker {self.name} started, following {self.victim}")
 
-    def _try_chase(self):
-        with self._lock:
-            if self._current_pose is None or self._target_pose is None:
-                print(f"DEBUG: {self.stalker_name} waiting for poses (curr={self._current_pose is not None}, target={self._target_pose is not None})")
-                return
-            current = self._current_pose
-            target = self._target_pose
         try:
-            linear, angular = self.controller.compute_velocity(current, target)
+            while self.running:
+                time.sleep(0.1)
+        except KeyboardInterrupt:
+            pass
+        finally:
+            self.manager.close()
+
+    def on_victim_pose(self, routing_key: str, data: dict):
+        pose_msg = PoseMessage.from_dict(data)
+        with self._lock:
+            self.victim_pose = Pose(pose_msg.x, pose_msg.y, pose_msg.theta)
+        self._compute_and_publish()
+
+    def on_self_pose(self, routing_key: str, data: dict):
+        pose_msg = PoseMessage.from_dict(data)
+        with self._lock:
+            self.my_pose = Pose(pose_msg.x, pose_msg.y, pose_msg.theta)
+        self._compute_and_publish()
+
+    def _compute_and_publish(self):
+        with self._lock:
+            if self.victim_pose is None or self.my_pose is None:
+                return
+            linear, angular = self.controller.compute_velocity(self.my_pose, self.victim_pose)
             vel_msg = VelocityMessage(linear, angular)
-            self.rabbit_manager.publish(f"{self.stalker_name}/cmd_vel", vel_msg.to_dict())
-        except Exception as e:
-            print(f"ERROR in {self.stalker_name}: {e}")
+        self.manager.publish_json(f"{self.name}/cmd_vel", vel_msg.to_dict())
+
+    def stop(self):
+        self.running = False

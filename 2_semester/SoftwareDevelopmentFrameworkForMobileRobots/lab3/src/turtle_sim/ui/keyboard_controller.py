@@ -30,5 +30,5 @@ class KeyboardController(QObject):
             linear, angular = self.key_map[key]
             total_linear += linear
             total_angular += angular
-       
+
         self.controller.publish_cmd_vel(self.turtle_name, total_linear, total_angular)
