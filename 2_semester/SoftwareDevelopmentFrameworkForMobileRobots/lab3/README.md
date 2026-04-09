@@ -36,7 +36,7 @@ uv run python -m turtle_sim \
 ### Сталкеры
 
 ```bash
-uv run python -m stalker \
+uv run python -m stalker_chain \
   --host localhost \
   --victim-turtle turtle1 \
   --num-followers 2 \
