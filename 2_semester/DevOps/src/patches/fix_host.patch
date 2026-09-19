@@ -1,0 +1,10 @@
+diff --git a/EXAMPLE_APP/main.py b/EXAMPLE_APP/main.py
+index 81cc3e9..e007592 100644
+--- a/EXAMPLE_APP/main.py
++++ b/EXAMPLE_APP/main.py
+@@ -75,4 +75,4 @@ def login():
+   
+ if __name__ == '__main__':
+     create_folder(app.config['UPLOAD_FOLDER'])
+-    app.run(debug = True)
++    app.run(host='0.0.0.0', debug=True)

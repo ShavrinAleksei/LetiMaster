@@ -1,0 +1,33 @@
+FROM ubuntu:22.04
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    git=1:2.34.1-1ubuntu1.17 \
+    python3=3.10.6-1~22.04.1 \
+    python3-pip=22.0.2+dfsg-1ubuntu0.7 \
+    patch=2.7.6-7build2 \
+    openssh-server=1:8.9p1-3ubuntu0.14 \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+RUN git clone --depth 1 https://github.com/moevm/devops-examples.git /tmp/devops-examples && \
+    cp -r /tmp/devops-examples/EXAMPLE_APP/* /app/ && \
+    rm -rf /tmp/devops-examples
+
+COPY app/ssh/keys/app_key.pub /tmp/
+COPY app/ssh/setup_ssh.sh /tmp/
+
+RUN chmod +x /tmp/setup_ssh.sh && \
+    bash /tmp/setup_ssh.sh && \
+    rm /tmp/setup_ssh.sh
+
+COPY app/requirements.txt /app/
+COPY patches/fix_host.patch /app/
+COPY app/entrypoint.sh /app/
+
+RUN pip3 install --no-cache-dir -r requirements.txt && \
+    patch main.py < fix_host.patch && \
+    chmod +x entrypoint.sh
+
+CMD ["bash", "entrypoint.sh"]
