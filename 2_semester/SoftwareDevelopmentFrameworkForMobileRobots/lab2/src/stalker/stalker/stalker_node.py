@@ -1,6 +1,5 @@
 import rclpy
 from rclpy.node import Node
-from rclpy.executors import ExternalShutdownException
 from turtlesim.msg import Pose
 from geometry_msgs.msg import Twist
 from .stalker_logic import TurtleController

@@ -32,6 +32,7 @@ class StalkerNode:
 
         try:
             while self.running:
+                self._compute_and_publish()
                 time.sleep(0.1)
         except KeyboardInterrupt:
             pass
@@ -42,13 +43,13 @@ class StalkerNode:
         pose_msg = PoseMessage.from_dict(data)
         with self._lock:
             self.victim_pose = Pose(pose_msg.x, pose_msg.y, pose_msg.theta)
-        self._compute_and_publish()
+        # self._compute_and_publish()
 
     def on_self_pose(self, routing_key: str, data: dict):
         pose_msg = PoseMessage.from_dict(data)
         with self._lock:
             self.my_pose = Pose(pose_msg.x, pose_msg.y, pose_msg.theta)
-        self._compute_and_publish()
+        # self._compute_and_publish()
 
     def _compute_and_publish(self):
         with self._lock:
